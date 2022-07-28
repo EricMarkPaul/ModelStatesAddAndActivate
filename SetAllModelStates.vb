@@ -20,30 +20,23 @@ Sub Main
 End Sub
 
 ''' <summary>
-''' Set or create a model state for the given distance
+''' Set or create a model state for the given distance.
 ''' Checks against the SupportDistance Parameter
 ''' </summary>
 ''' <param name="bracketOcc">ComponentOcurrence for the bracket</param>
 ''' <param name="distance">Used as both the model state name and "SupportDistance" parameter value</param>
 Private Sub SetModelState(bracketOcc As ComponentOccurrence, distance As String)
-	Dim stateToSet As ModelState
-
 	Dim bracketCompDef As PartComponentDefinition = bracketOcc.Definition.Document.componentdefinition
 	'This factory document is new!
 	Dim bracketFacDoc As PartDocument = bracketCompDef.FactoryDocument
+	Dim bracketModelStates As ModelStates = bracketFacDoc.ComponentDefinition.ModelStates
 	
 	'Check if the model state exists already by looking at names
-	Dim bracketModelStates As ModelStates = bracketFacDoc.ComponentDefinition.ModelStates
-	For Each modelState As ModelState In bracketModelStates
-		If ModelState.name = distance Then
-			bracketOcc.ActiveModelState = ModelState.name
-			stateToSet = ModelState
-			Exit For
-		End If
-	Next
-	
-	'If not model state was found, we'll create one as well as set the correct parameter value
-	If stateToSet Is Nothing Then
+	Dim stateToSet As ModelState = (From foundModelState As ModelState In bracketModelStates
+									Where foundModelState.Name = distance).FirstOrDefault
+	If stateToSet IsNot Nothing Then
+		bracketOcc.ActiveModelState = stateToSet.Name
+	Else
 		'Create a new model state
 		stateToSet = bracketModelStates.Add(distance)
 		'Activate the new model state before we update the user parameter as this is different per state
